@@ -47,7 +47,7 @@ function process() {
             // On sign out we cancel any in flight requests from the user. Since that user is no longer signed in their requests should not be retried.
             // Duplicate records don't need to be retried as they just mean the record already exists on the server
             if (error.name === CONST.ERROR.REQUEST_CANCELLED || error.message === CONST.ERROR.DUPLICATE_RECORD) {
-                PersistedRequests.remove(requestToProcess);
+                PersistedRequests.removeAllMatching(requestToProcess);
                 RequestThrottle.clear();
                 return process();
             }
@@ -138,4 +138,4 @@ function waitForIdle() {
     return isReadyPromise;
 }
 
-export {flush, getCurrentRequest, isRunning, push, waitForIdle};
+export { flush, getCurrentRequest, isRunning, push, waitForIdle };

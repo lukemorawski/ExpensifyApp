@@ -1,5 +1,6 @@
 import Onyx from 'react-native-onyx';
 import _ from 'underscore';
+import removeElement from 'lodash/remove';
 import CONST from '../../CONST';
 import ONYXKEYS from '../../ONYXKEYS';
 import HttpUtils from '../HttpUtils';
@@ -29,10 +30,26 @@ function save(requestsToPersist) {
 }
 
 /**
- * @param {Object} requestToRemove
+ * Remove a request from the persisted requests array.
+ * Removes first record from the array that matches the requestToRemove param.
+ * @param {Object} requestToRemove - The request to remove
  */
 function remove(requestToRemove) {
+    const indexToRemove = _.findIndex(persistedRequests, (persistedRequest) => _.isEqual(persistedRequest, requestToRemove));
+    if (indexToRemove !== -1) {
+        removeElement(persistedRequests, (__, index) => index === indexToRemove);
+    }
+
+    Onyx.set(ONYXKEYS.PERSISTED_REQUESTS, persistedRequests);
+}
+
+/**
+ * Removes all matching requests from the persisted requests array.
+ * @param {Object} requestToRemove - The request to remove
+ */
+function removeAllMatching(requestToRemove) {
     persistedRequests = _.reject(persistedRequests, (persistedRequest) => _.isEqual(persistedRequest, requestToRemove));
+
     Onyx.set(ONYXKEYS.PERSISTED_REQUESTS, persistedRequests);
 }
 
@@ -43,4 +60,4 @@ function getAll() {
     return persistedRequests;
 }
 
-export {clear, save, getAll, remove};
+export { clear, getAll, remove, removeAllMatching, save };
