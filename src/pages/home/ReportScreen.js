@@ -1,10 +1,10 @@
 import React from 'react';
-import {withOnyx} from 'react-native-onyx';
+import { withOnyx } from 'react-native-onyx';
 import PropTypes from 'prop-types';
-import {View} from 'react-native';
+import { View } from 'react-native';
 import lodashGet from 'lodash/get';
 import _ from 'underscore';
-import {PortalHost} from '@gorhom/portal';
+import { PortalHost } from '@gorhom/portal';
 import styles from '../../styles/styles';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import HeaderView from './HeaderView';
@@ -17,18 +17,18 @@ import ReportActionsView from './report/ReportActionsView';
 import CONST from '../../CONST';
 import ReportActionsSkeletonView from '../../components/ReportActionsSkeletonView';
 import reportActionPropTypes from './report/reportActionPropTypes';
-import {withNetwork} from '../../components/OnyxProvider';
+import { withNetwork } from '../../components/OnyxProvider';
 import compose from '../../libs/compose';
 import Visibility from '../../libs/Visibility';
 import networkPropTypes from '../../components/networkPropTypes';
-import withWindowDimensions, {windowDimensionsPropTypes} from '../../components/withWindowDimensions';
+import withWindowDimensions, { windowDimensionsPropTypes } from '../../components/withWindowDimensions';
 import OfflineWithFeedback from '../../components/OfflineWithFeedback';
 import ReportFooter from './report/ReportFooter';
 import Banner from '../../components/Banner';
 import withLocalize from '../../components/withLocalize';
 import reportPropTypes from '../reportPropTypes';
 import FullPageNotFoundView from '../../components/BlockingViews/FullPageNotFoundView';
-import withViewportOffsetTop, {viewportOffsetTopPropTypes} from '../../components/withViewportOffsetTop';
+import withViewportOffsetTop, { viewportOffsetTopPropTypes } from '../../components/withViewportOffsetTop';
 import * as ReportActionsUtils from '../../libs/ReportActionsUtils';
 import personalDetailsPropType from '../personalDetailsPropType';
 import withNavigationFocus from '../../components/withNavigationFocus';
@@ -37,7 +37,7 @@ import EmojiPicker from '../../components/EmojiPicker/EmojiPicker';
 import * as EmojiPickerAction from '../../libs/actions/EmojiPickerAction';
 import TaskHeader from '../../components/TaskHeader';
 import MoneyRequestHeader from '../../components/MoneyRequestHeader';
-import withNavigation, {withNavigationPropTypes} from '../../components/withNavigation';
+import withNavigation, { withNavigationPropTypes } from '../../components/withNavigation';
 import * as ComposerActions from '../../libs/actions/Composer';
 import ReportScreenContext from './ReportScreenContext';
 
@@ -155,6 +155,20 @@ class ReportScreen extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
+        const onyxReportID = this.props.report.reportID;
+        const routeReportID = getReportID(this.props.route);
+        //
+        // Policy name change
+        const policyName = lodashGet(this.props.policies[`${ONYXKEYS.COLLECTION.POLICY}${this.props.report.policyID}`], 'name');
+        const prevPolicyName = lodashGet(prevProps.policies[`${ONYXKEYS.COLLECTION.POLICY}${this.props.report.policyID}`], 'name');
+        if (policyName !== prevPolicyName && !!policyName.length) {
+            Report.updateReportMessagesWithNewWorkspaceName({
+                policyName,
+                prevPolicyName,
+                reportID: onyxReportID,
+            });
+        }
+
         // If composer should be hidden, hide emoji picker as well
         if (ReportUtils.shouldHideComposer(this.props.report, this.props.errors)) {
             EmojiPickerAction.hideEmojiPicker(true);
@@ -163,8 +177,6 @@ class ReportScreen extends React.Component {
         // the ReportScreen never actually unmounts and the reportID in the route also doesn't change.
         // Therefore, we need to compare if the existing reportID is the same as the one in the route
         // before deciding that we shouldn't call OpenReport.
-        const onyxReportID = this.props.report.reportID;
-        const routeReportID = getReportID(this.props.route);
         if (onyxReportID === prevProps.report.reportID && (!onyxReportID || onyxReportID === routeReportID)) {
             return;
         }
@@ -225,7 +237,7 @@ class ReportScreen extends React.Component {
     }
 
     dismissBanner() {
-        this.setState({isBannerVisible: false});
+        this.setState({ isBannerVisible: false });
     }
 
     chatWithAccountManager() {
@@ -238,7 +250,13 @@ class ReportScreen extends React.Component {
         const reportID = getReportID(this.props.route);
         const addWorkspaceRoomOrChatPendingAction = lodashGet(this.props.report, 'pendingFields.addWorkspaceRoom') || lodashGet(this.props.report, 'pendingFields.createChat');
         const addWorkspaceRoomOrChatErrors = lodashGet(this.props.report, 'errorFields.addWorkspaceRoom') || lodashGet(this.props.report, 'errorFields.createChat');
-        const screenWrapperStyle = [styles.appContent, styles.flex1, {marginTop: this.props.viewportOffsetTop}];
+        const screenWrapperStyle = [
+            styles.appContent,
+            styles.flex1,
+            {
+                marginTop: this.props.viewportOffsetTop,
+            },
+        ];
 
         // There are no reportActions at all to display and we are still in the process of loading the next set of actions.
         const isLoadingInitialReportActions = _.isEmpty(this.props.reportActions) && this.props.report.isLoadingReportActions;
@@ -322,7 +340,7 @@ class ReportScreen extends React.Component {
                                     return;
                                 }
                                 reportActionsListViewHeight = skeletonViewContainerHeight;
-                                this.setState({skeletonViewContainerHeight});
+                                this.setState({ skeletonViewContainerHeight });
                             }}
                         >
                             {this.isReportReadyForDisplay() && !isLoadingInitialReportActions && !isLoading && (
@@ -388,15 +406,15 @@ export default compose(
             key: ONYXKEYS.IS_SIDEBAR_LOADED,
         },
         reportActions: {
-            key: ({route}) => `${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${getReportID(route)}`,
+            key: ({ route }) => `${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${getReportID(route)}`,
             canEvict: false,
             selector: ReportActionsUtils.getSortedReportActionsForDisplay,
         },
         report: {
-            key: ({route}) => `${ONYXKEYS.COLLECTION.REPORT}${getReportID(route)}`,
+            key: ({ route }) => `${ONYXKEYS.COLLECTION.REPORT}${getReportID(route)}`,
         },
         isComposerFullSize: {
-            key: ({route}) => `${ONYXKEYS.COLLECTION.REPORT_IS_COMPOSER_FULL_SIZE}${getReportID(route)}`,
+            key: ({ route }) => `${ONYXKEYS.COLLECTION.REPORT_IS_COMPOSER_FULL_SIZE}${getReportID(route)}`,
         },
         betas: {
             key: ONYXKEYS.BETAS,

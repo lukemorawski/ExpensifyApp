@@ -1,4 +1,4 @@
-import {InteractionManager} from 'react-native';
+import { InteractionManager } from 'react-native';
 import _ from 'underscore';
 import lodashGet from 'lodash/get';
 import ExpensiMark from 'expensify-common/lib/ExpensiMark';
@@ -105,7 +105,7 @@ function getNormalizedTypingStatus(typingStatus) {
     let normalizedTypingStatus = typingStatus;
 
     if (_.first(_.keys(typingStatus)) === 'userLogin') {
-        normalizedTypingStatus = {[typingStatus.userLogin]: true};
+        normalizedTypingStatus = { [typingStatus.userLogin]: true };
     }
 
     return normalizedTypingStatus;
@@ -154,7 +154,7 @@ function subscribeToReportTypingEvents(reportID) {
             delete typingWatchTimers[reportUserIdentifier];
         }, 1500);
     }).catch((error) => {
-        Log.hmmm('[Report] Failed to initially subscribe to Pusher channel', false, {errorType: error.type, pusherChannelName});
+        Log.hmmm('[Report] Failed to initially subscribe to Pusher channel', false, { errorType: error.type, pusherChannelName });
     });
 }
 
@@ -175,7 +175,7 @@ function unsubscribeFromReportChannel(reportID) {
 
 const defaultNewActionSubscriber = {
     reportID: '',
-    callback: () => {},
+    callback: () => { },
 };
 
 let newActionSubscriber = defaultNewActionSubscriber;
@@ -188,7 +188,7 @@ let newActionSubscriber = defaultNewActionSubscriber;
  * @returns {Function}
  */
 function subscribeToNewActionEvent(reportID, callback) {
-    newActionSubscriber = {callback, reportID};
+    newActionSubscriber = { callback, reportID };
     return () => {
         newActionSubscriber = defaultNewActionSubscriber;
     };
@@ -290,7 +290,7 @@ function addActions(reportID, text = '', file) {
         {
             onyxMethod: Onyx.METHOD.MERGE,
             key: `${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${reportID}`,
-            value: _.mapObject(optimisticReportActions, () => ({pendingAction: null})),
+            value: _.mapObject(optimisticReportActions, () => ({ pendingAction: null })),
         },
     ];
 
@@ -312,7 +312,7 @@ function addActions(reportID, text = '', file) {
         optimisticData.push({
             onyxMethod: Onyx.METHOD.MERGE,
             key: ONYXKEYS.PERSONAL_DETAILS_LIST,
-            value: {[currentUserAccountID]: {timezone}},
+            value: { [currentUserAccountID]: { timezone } },
         });
         DateUtils.setTimezoneUpdated();
     }
@@ -326,7 +326,6 @@ function addActions(reportID, text = '', file) {
 }
 
 /**
- *
  * Add an attachment and optional comment.
  *
  * @param {String} reportID
@@ -432,12 +431,16 @@ function openReport(reportID, participantLoginList = [], newReportObject = {}, p
         onyxData.optimisticData.push({
             onyxMethod: Onyx.METHOD.SET,
             key: `${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${reportID}`,
-            value: {[optimisticCreatedAction.reportActionID]: optimisticCreatedAction},
+            value: {
+                [optimisticCreatedAction.reportActionID]: optimisticCreatedAction,
+            },
         });
         onyxData.successData.push({
             onyxMethod: Onyx.METHOD.MERGE,
             key: `${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${reportID}`,
-            value: {[optimisticCreatedAction.reportActionID]: {pendingAction: null}},
+            value: {
+                [optimisticCreatedAction.reportActionID]: { pendingAction: null },
+            },
         });
 
         // Add optimistic personal details for new participants
@@ -465,12 +468,12 @@ function openReport(reportID, participantLoginList = [], newReportObject = {}, p
             onyxData.optimisticData.push({
                 onyxMethod: Onyx.METHOD.MERGE,
                 key: `${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${newReportObject.parentReportID}`,
-                value: {[parentReportActionID]: {childReportID: reportID}},
+                value: { [parentReportActionID]: { childReportID: reportID } },
             });
             onyxData.failureData.push({
                 onyxMethod: Onyx.METHOD.MERGE,
                 key: `${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${newReportObject.parentReportID}`,
-                value: {[parentReportActionID]: {childReportID: '0'}},
+                value: { [parentReportActionID]: { childReportID: '0' } },
             });
         }
     }
@@ -530,7 +533,6 @@ function navigateToAndOpenReportWithAccountIDs(participantAccountIDs) {
  * @param {String} childReportID The reportID we are trying to open
  * @param {Object} parentReportAction the parent comment of a thread
  * @param {String} parentReportID The reportID of the parent
- *
  */
 function navigateToAndOpenChildReport(childReportID = '0', parentReportAction = {}, parentReportID = '0') {
     if (childReportID !== '0') {
@@ -737,7 +739,7 @@ function togglePinnedState(reportID, isPinnedChat) {
         {
             onyxMethod: Onyx.METHOD.MERGE,
             key: `${ONYXKEYS.COLLECTION.REPORT}${reportID}`,
-            value: {isPinned: pinnedValue},
+            value: { isPinned: pinnedValue },
         },
     ];
 
@@ -747,7 +749,7 @@ function togglePinnedState(reportID, isPinnedChat) {
             reportID,
             pinnedValue,
         },
-        {optimisticData},
+        { optimisticData },
     );
 }
 
@@ -779,7 +781,7 @@ function saveReportCommentNumberOfLines(reportID, numberOfLines) {
  * @returns {Promise}
  */
 function setReportWithDraft(reportID, hasDraft) {
-    return Onyx.merge(`${ONYXKEYS.COLLECTION.REPORT}${reportID}`, {hasDraft});
+    return Onyx.merge(`${ONYXKEYS.COLLECTION.REPORT}${reportID}`, { hasDraft });
 }
 
 /**
@@ -912,7 +914,11 @@ function deleteReportComment(reportID, reportAction) {
         reportID: originalReportID,
         reportActionID,
     };
-    API.write('DeleteComment', parameters, {optimisticData, successData, failureData});
+    API.write('DeleteComment', parameters, {
+        optimisticData,
+        successData,
+        failureData,
+    });
 }
 
 /**
@@ -976,7 +982,9 @@ function editReportComment(reportID, originalReportAction, textForNewComment) {
     // For longer comments, skip parsing and display plaintext for performance reasons. It takes over 40s to parse a 100k long string!!
     let parsedOriginalCommentHTML = originalCommentHTML;
     if (textForNewComment.length < CONST.MAX_MARKUP_LENGTH) {
-        const autolinkFilter = {filterRules: _.filter(_.pluck(parser.rules, 'name'), (name) => name !== 'autolink')};
+        const autolinkFilter = {
+            filterRules: _.filter(_.pluck(parser.rules, 'name'), (name) => name !== 'autolink'),
+        };
         parsedOriginalCommentHTML = parser.replace(parser.htmlToMarkdown(originalCommentHTML).trim(), autolinkFilter);
     }
 
@@ -1059,7 +1067,11 @@ function editReportComment(reportID, originalReportAction, textForNewComment) {
         reportComment: htmlForNewComment,
         reportActionID,
     };
-    API.write('UpdateComment', parameters, {optimisticData, successData, failureData});
+    API.write('UpdateComment', parameters, {
+        optimisticData,
+        successData,
+        failureData,
+    });
 }
 
 /**
@@ -1097,17 +1109,24 @@ function updateNotificationPreferenceAndNavigate(reportID, previousValue, newVal
         {
             onyxMethod: Onyx.METHOD.MERGE,
             key: `${ONYXKEYS.COLLECTION.REPORT}${reportID}`,
-            value: {notificationPreference: newValue},
+            value: { notificationPreference: newValue },
         },
     ];
     const failureData = [
         {
             onyxMethod: Onyx.METHOD.MERGE,
             key: `${ONYXKEYS.COLLECTION.REPORT}${reportID}`,
-            value: {notificationPreference: previousValue},
+            value: { notificationPreference: previousValue },
         },
     ];
-    API.write('UpdateReportNotificationPreference', {reportID, notificationPreference: newValue}, {optimisticData, failureData});
+    API.write(
+        'UpdateReportNotificationPreference',
+        {
+            reportID,
+            notificationPreference: newValue,
+        },
+        { optimisticData, failureData },
+    );
     Navigation.navigate(ROUTES.getReportSettingsRoute(reportID));
 }
 
@@ -1128,17 +1147,24 @@ function updateWelcomeMessage(reportID, previousValue, newValue) {
         {
             onyxMethod: Onyx.METHOD.MERGE,
             key: `${ONYXKEYS.COLLECTION.REPORT}${reportID}`,
-            value: {welcomeMessage: parsedWelcomeMessage},
+            value: { welcomeMessage: parsedWelcomeMessage },
         },
     ];
     const failureData = [
         {
             onyxMethod: Onyx.METHOD.MERGE,
             key: `${ONYXKEYS.COLLECTION.REPORT}${reportID}`,
-            value: {welcomeMessage: previousValue},
+            value: { welcomeMessage: previousValue },
         },
     ];
-    API.write('UpdateWelcomeMessage', {reportID, welcomeMessage: parsedWelcomeMessage}, {optimisticData, failureData});
+    API.write(
+        'UpdateWelcomeMessage',
+        {
+            reportID,
+            welcomeMessage: parsedWelcomeMessage,
+        },
+        { optimisticData, failureData },
+    );
     Navigation.goBack();
 }
 
@@ -1156,17 +1182,24 @@ function updateWriteCapabilityAndNavigate(report, newValue) {
         {
             onyxMethod: Onyx.METHOD.MERGE,
             key: `${ONYXKEYS.COLLECTION.REPORT}${report.reportID}`,
-            value: {writeCapability: newValue},
+            value: { writeCapability: newValue },
         },
     ];
     const failureData = [
         {
             onyxMethod: Onyx.METHOD.MERGE,
             key: `${ONYXKEYS.COLLECTION.REPORT}${report.reportID}`,
-            value: {writeCapability: report.writeCapability},
+            value: { writeCapability: report.writeCapability },
         },
     ];
-    API.write('UpdateReportWriteCapability', {reportID: report.reportID, writeCapability: newValue}, {optimisticData, failureData});
+    API.write(
+        'UpdateReportWriteCapability',
+        {
+            reportID: report.reportID,
+            writeCapability: newValue,
+        },
+        { optimisticData, failureData },
+    );
     // Return to the report settings page since this field utilizes push-to-page
     Navigation.navigate(ROUTES.getReportSettingsRoute(report.reportID));
 }
@@ -1212,7 +1245,6 @@ function addPolicyReport(policyID, reportName, visibility, policyMembers) {
         false,
         '',
         visibility,
-
         // The room might contain all policy members so notifying always should be opt-in only.
         CONST.REPORT.NOTIFICATION_PREFERENCE.DAILY,
     );
@@ -1235,7 +1267,7 @@ function addPolicyReport(policyID, reportName, visibility, policyMembers) {
         {
             onyxMethod: Onyx.METHOD.SET,
             key: `${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${policyReport.reportID}`,
-            value: {[createdReportAction.reportActionID]: createdReportAction},
+            value: { [createdReportAction.reportActionID]: createdReportAction },
         },
     ];
     const successData = [
@@ -1279,7 +1311,7 @@ function addPolicyReport(policyID, reportName, visibility, policyMembers) {
             reportID: policyReport.reportID,
             createdReportActionID: createdReportAction.reportActionID,
         },
-        {optimisticData, successData, failureData},
+        { optimisticData, successData, failureData },
     );
     Navigation.dismissModal(policyReport.reportID);
 }
@@ -1370,7 +1402,15 @@ function updatePolicyRoomNameAndNavigate(policyRoomReport, policyRoomName) {
             },
         },
     ];
-    API.write('UpdatePolicyRoomName', {reportID, policyRoomName}, {optimisticData, successData, failureData});
+    API.write(
+        'UpdatePolicyRoomName',
+        { reportID, policyRoomName },
+        {
+            optimisticData,
+            successData,
+            failureData,
+        },
+    );
     Navigation.navigate(ROUTES.getReportSettingsRoute(reportID));
 }
 
@@ -1408,7 +1448,7 @@ function shouldShowReportActionNotification(reportID, action = null, isRemote = 
     // Due to payload size constraints, some push notifications may have their report action stripped
     // so we must double check that we were provided an action before using it in these checks.
     if (action && ReportActionsUtils.isDeletedAction(action)) {
-        Log.info(`${tag} Skipping notification because the action was deleted`, false, {reportID, action});
+        Log.info(`${tag} Skipping notification because the action was deleted`, false, { reportID, action });
         return false;
     }
 
@@ -1439,7 +1479,7 @@ function shouldShowReportActionNotification(reportID, action = null, isRemote = 
     // If this notification was delayed and the user saw the message already, don't show it
     const report = allReports[reportID];
     if (action && report && report.lastReadTime >= action.created) {
-        Log.info(`${tag} No notification because the comment was already read`, false, {created: action.created, lastReadTime: report.lastReadTime});
+        Log.info(`${tag} No notification because the comment was already read`, false, { created: action.created, lastReadTime: report.lastReadTime });
         return false;
     }
 
@@ -1479,7 +1519,9 @@ function showReportActionNotification(reportID, action) {
  * @param {String} reportID
  */
 function clearIOUError(reportID) {
-    Onyx.merge(`${ONYXKEYS.COLLECTION.REPORT}${reportID}`, {errorFields: {iou: null}});
+    Onyx.merge(`${ONYXKEYS.COLLECTION.REPORT}${reportID}`, {
+        errorFields: { iou: null },
+    });
 }
 
 /**
@@ -1546,14 +1588,20 @@ function addEmojiReaction(reportID, originalReportAction, emoji, skinTone = pref
         };
     } else {
         // Make a copy of the reaction object so that we can modify it without mutating the original
-        reactionObject = {...reactionObject};
+        reactionObject = { ...reactionObject };
     }
 
     if (hasAccountIDReacted(currentUserAccountID, reactionObject.users, skinTone)) {
         return;
     }
 
-    reactionObject.users = [...reactionObject.users, {accountID: currentUserAccountID, skinTone}];
+    reactionObject.users = [
+        ...reactionObject.users,
+        {
+            accountID: currentUserAccountID,
+            skinTone,
+        },
+    ];
     let updatedReactions = [...(message.reactions || [])];
     if (needToInsertReactionObject) {
         updatedReactions = [...updatedReactions, reactionObject];
@@ -1576,7 +1624,7 @@ function addEmojiReaction(reportID, originalReportAction, emoji, skinTone = pref
         sequenceNumber: originalReportAction.sequenceNumber,
         reportActionID: originalReportAction.reportActionID,
     };
-    API.write('AddEmojiReaction', parameters, {optimisticData});
+    API.write('AddEmojiReaction', parameters, { optimisticData });
 }
 
 /**
@@ -1608,7 +1656,6 @@ function removeEmojiReaction(reportID, originalReportAction, emoji) {
             }
             return reaction;
         }),
-
         // Remove any null reactions
         (reportObject) => reportObject !== null,
     );
@@ -1627,7 +1674,7 @@ function removeEmojiReaction(reportID, originalReportAction, emoji) {
         reportActionID: originalReportAction.reportActionID,
         emojiCode: emoji.name,
     };
-    API.write('RemoveEmojiReaction', parameters, {optimisticData});
+    API.write('RemoveEmojiReaction', parameters, { optimisticData });
 }
 
 /**
@@ -1823,55 +1870,121 @@ function flagComment(reportID, reportAction, severity) {
         reportActionID,
     };
 
-    API.write('FlagComment', parameters, {optimisticData, successData, failureData});
+    API.write('FlagComment', parameters, {
+        optimisticData,
+        successData,
+        failureData,
+    });
+}
+
+/**
+ * This function updates the messages in a given report with a new workspace name. It replaces occurrences
+ * of the previous workspace name with the new workspace name, but only for actions of type "REPORTPREVIEW".
+ *
+ * @param {Object} params - The parameters for the function
+ * @param {string} params.policyName - The new workspace name
+ * @param {string} params.prevPolicyName - The previous workspace name
+ * @param {string} params.reportID - The ID of the report to update
+ *
+ * @returns {void} - The function doesn't return anything. It merges the updated report actions into
+ *                    the `ONYXKEYS.COLLECTION.REPORT_ACTIONS` Onyx key.
+ *
+ * @throws Will throw an error if the reportID, policyName or prevPolicyName are not provided.
+ */
+function updateReportMessagesWithNewWorkspaceName({ policyName, prevPolicyName, reportID }) {
+    if (!prevPolicyName || !policyName || !reportID) {
+        throw Error("Can't update messages with new workspace name. Not all params provided.");
+    }
+
+    const reportActions = lodashGet(allReportActions, reportID);
+
+    if (!reportActions || _.isEmpty(reportActions)) return;
+
+    const updatedReportActions = {};
+
+    _.each(reportActions, (action) => {
+        const updatedMessages = _.map(action.message, (message) => {
+            // If the actionName is not "REPORTPREVIEW", skip to the next action
+            if (action.actionName !== CONST.REPORT.ACTIONS.TYPE.REPORTPREVIEW) {
+                return;
+            }
+            const regExp = new RegExp(`\\b${_.escape(prevPolicyName)}\\b`, 'gi');
+            if (regExp.test(message.text)) {
+                const newMessage = message.text.replace(regExp, policyName);
+                return {
+                    ...message,
+                    text: newMessage,
+                    html: newMessage,
+                };
+            }
+            return message;
+        });
+
+        if (
+            _.some(updatedMessages, (message) => {
+                if (!message || _.isEmpty(message)) return;
+                const regExp = new RegExp(`\\b${_.escape(policyName)}\\b`, 'gi');
+                return regExp.test(message.text);
+            }) &&
+            action.reportActionID
+        ) {
+            updatedReportActions[action.reportActionID] = {
+                ...action,
+                message: updatedMessages,
+            };
+        }
+    });
+
+    Onyx.merge(`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${reportID}`, updatedReportActions);
 }
 
 export {
-    addComment,
     addAttachment,
-    reconnect,
-    updateWelcomeMessage,
-    updateWriteCapabilityAndNavigate,
-    updateNotificationPreferenceAndNavigate,
-    subscribeToReportTypingEvents,
-    unsubscribeFromReportChannel,
-    saveReportComment,
-    saveReportCommentNumberOfLines,
-    broadcastUserIsTyping,
-    togglePinnedState,
-    editReportComment,
-    handleUserDeletedLinksInHtml,
-    saveReportActionDraft,
-    saveReportActionDraftNumberOfLines,
-    deleteReportComment,
-    navigateToConciergeChat,
-    setReportWithDraft,
+    addComment,
+    addEmojiReaction,
     addPolicyReport,
+    broadcastUserIsTyping,
+    clearIOUError,
+    clearPolicyRoomNameErrors,
     deleteReport,
-    navigateToConciergeChatAndDeleteReport,
-    setIsComposerFullSize,
+    deleteReportComment,
+    editReportComment,
     expandURLPreview,
+    flagComment,
+    handleUserDeletedLinksInHtml,
+    hasAccountIDReacted,
+    leaveRoom,
     markCommentAsUnread,
-    readNewestAction,
-    readOldestAction,
-    openReport,
-    openReportFromDeepLink,
+    navigateToAndOpenChildReport,
     navigateToAndOpenReport,
     navigateToAndOpenReportWithAccountIDs,
-    navigateToAndOpenChildReport,
-    updatePolicyRoomNameAndNavigate,
-    clearPolicyRoomNameErrors,
-    clearIOUError,
-    subscribeToNewActionEvent,
+    navigateToConciergeChat,
+    navigateToConciergeChatAndDeleteReport,
     notifyNewAction,
-    showReportActionNotification,
-    addEmojiReaction,
-    removeEmojiReaction,
-    toggleEmojiReaction,
-    hasAccountIDReacted,
-    shouldShowReportActionNotification,
-    leaveRoom,
-    setLastOpenedPublicRoom,
-    flagComment,
     openLastOpenedPublicRoom,
+    openReport,
+    openReportFromDeepLink,
+    readNewestAction,
+    readOldestAction,
+    reconnect,
+    removeEmojiReaction,
+    saveReportActionDraft,
+    saveReportActionDraftNumberOfLines,
+    saveReportComment,
+    saveReportCommentNumberOfLines,
+    setIsComposerFullSize,
+    setLastOpenedPublicRoom,
+    setReportWithDraft,
+    shouldShowReportActionNotification,
+    showReportActionNotification,
+    subscribeToNewActionEvent,
+    subscribeToReportTypingEvents,
+    toggleEmojiReaction,
+    togglePinnedState,
+    unsubscribeFromReportChannel,
+    updateNotificationPreferenceAndNavigate,
+    updatePolicyRoomNameAndNavigate,
+    updateReportMessagesWithNewWorkspaceName,
+    updateWelcomeMessage,
+    updateWriteCapabilityAndNavigate,
 };
