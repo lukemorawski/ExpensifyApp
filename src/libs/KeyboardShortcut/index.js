@@ -82,6 +82,7 @@ _.each(CONST.KEYBOARD_SHORTCUTS, (shortcut) => {
  * @private
  */
 function unsubscribe(displayName, callbackID) {
+    console.log('unsubscribe', displayName);
     eventHandlers[displayName] = _.reject(eventHandlers[displayName], (callback) => callback.id === callbackID);
 }
 
@@ -145,6 +146,22 @@ function subscribe(key, callback, descriptionKey, modifiers = 'shift', captureOn
 }
 
 /**
+ * Checks if a given keyboard shortcut is already registered.
+ *
+ * @param {String} key The key to check, i.e. 'K' or 'Escape'
+ * @param {Array<String>} [modifiers] Can either be shift or control
+ * @returns {Boolean}
+ */
+function isShortcutRegistered(key, modifiers) {
+    const platformAdjustedModifiers = getPlatformEquivalentForKeys(modifiers);
+    const displayName = getDisplayName(key, platformAdjustedModifiers);
+    if (!_.has(eventHandlers, displayName)) {
+        return false;
+    }
+    return !!eventHandlers[displayName].length;
+}
+
+/**
  * This module configures a global keyboard event handler.
  *
  * It uses a stack to store event handlers for each key combination. Some additional details:
@@ -162,6 +179,7 @@ function subscribe(key, callback, descriptionKey, modifiers = 'shift', captureOn
 const KeyboardShortcut = {
     subscribe,
     getDocumentedShortcuts,
+    isShortcutRegistered,
 };
 
 export default KeyboardShortcut;

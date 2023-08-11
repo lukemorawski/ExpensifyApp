@@ -1,16 +1,22 @@
 import React from 'react';
 import lodashGet from 'lodash/get';
-import {View} from 'react-native';
+import { View } from 'react-native';
 import * as formSubmitPropTypes from './formSubmitPropTypes';
 import CONST from '../../CONST';
 import isEnterWhileComposition from '../../libs/KeyboardShortcut/isEnterWhileComposition';
+import KeyboardShortcut from '../../libs/KeyboardShortcut';
 
-function FormSubmit({innerRef, children, onSubmit, style}) {
+function FormSubmit({ innerRef, children, onSubmit, style }) {
     /**
      * Calls the submit callback when ENTER is pressed on a form element.
      * @param {Object} event
      */
     const submitForm = (event) => {
+        console.log('submit form', event.key, KeyboardShortcut.isShortcutRegistered('Enter'));
+        // If enter is pressed and there's currently registered keyboard shortcut for the same key (that might do something else) then do not submit form
+        if (event.key === CONST.KEYBOARD_SHORTCUTS.ENTER.shortcutKey && KeyboardShortcut.isShortcutRegistered(CONST.KEYBOARD_SHORTCUTS.ENTER.shortcutKey)) {
+            return;
+        }
         // ENTER is pressed with modifier key or during text composition, do not submit the form
         if (event.shiftKey || event.key !== CONST.KEYBOARD_SHORTCUTS.ENTER.shortcutKey || isEnterWhileComposition(event)) {
             return;
