@@ -1,12 +1,13 @@
 import lodashGet from 'lodash/get';
 import PropTypes from 'prop-types';
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {View} from 'react-native';
-import {withOnyx} from 'react-native-onyx';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { View } from 'react-native';
+import { withOnyx } from 'react-native-onyx';
 import _ from 'underscore';
 import OptionsSelector from '@components/OptionsSelector';
 import refPropTypes from '@components/refPropTypes';
-import withLocalize, {withLocalizePropTypes} from '@components/withLocalize';
+import SelectionList from '@components/SelectionList';
+import withLocalize, { withLocalizePropTypes } from '@components/withLocalize';
 import useNetwork from '@hooks/useNetwork';
 import * as Report from '@libs/actions/Report';
 import * as Browser from '@libs/Browser';
@@ -124,7 +125,7 @@ function MoneyRequestParticipantsSelector({
             userToInvite: chatOptions.userToInvite,
         };
     }, [betas, reports, participants, personalDetails, searchTerm, iouType, isDistanceRequest]);
-    const {isOffline} = useNetwork();
+    const { isOffline } = useNetwork();
 
     const maxParticipantsReached = participants.length === CONST.REPORT.MAXIMUM_PARTICIPANTS;
 
@@ -133,7 +134,7 @@ function MoneyRequestParticipantsSelector({
      *
      * @returns {Array}
      */
-    const sections = useMemo(() => {
+    /* const sections = useMemo(() => {
         const newSections = [];
         let indexOffset = 0;
 
@@ -182,7 +183,78 @@ function MoneyRequestParticipantsSelector({
         }
 
         return newSections;
+    }, [maxParticipantsReached, newChatOptions, participants, personalDetails, translate, searchTerm]); */
+    console.log('participants', newChatOptions);
+
+    const sections = useMemo(() => {
+        const newSections = [];
+        let indexOffset = 0;
+
+        // Create a set of accountIDs from participants for faster lookup
+        const selectedIDs = new Set(_.map(participants, (p) => p.reportID || p.accountID));
+        console.log('selectedIDs', selectedIDs);
+
+        // Function to mark items as selected
+        const mapping = (item) => {
+            console.log('item', item);
+            return {
+                ...item,
+                isSelected: selectedIDs.has(item.reportID || item.accountID),
+            };
+        };
+        const markSelected = (items) => _.map(items, mapping);
+
+        const formatResults = OptionsListUtils.formatSectionsFromSearchTerm(
+            searchTerm,
+            participants,
+            newChatOptions.recentReports,
+            newChatOptions.personalDetails,
+            personalDetails,
+            true,
+            indexOffset,
+        );
+        newSections.push({ ...formatResults.section, data: markSelected(formatResults.section.data) });
+        indexOffset = formatResults.newIndexOffset;
+
+        if (maxParticipantsReached) {
+            return newSections;
+        }
+
+        newSections.push({
+            title: translate('common.recents'),
+            data: markSelected(newChatOptions.recentReports),
+            shouldShow: !_.isEmpty(newChatOptions.recentReports),
+            indexOffset,
+        });
+        indexOffset += newChatOptions.recentReports.length;
+
+        newSections.push({
+            title: translate('common.contacts'),
+            data: markSelected(newChatOptions.personalDetails),
+            shouldShow: !_.isEmpty(newChatOptions.personalDetails),
+            indexOffset,
+        });
+        indexOffset += newChatOptions.personalDetails.length;
+
+        if (newChatOptions.userToInvite && !OptionsListUtils.isCurrentUser(newChatOptions.userToInvite)) {
+            const markedUserToInvite = markSelected([newChatOptions.userToInvite]);
+            newSections.push({
+                title: undefined,
+                data: _.chain(markedUserToInvite)
+                    .map((participant) => {
+                        const isPolicyExpenseChat = lodashGet(participant, 'isPolicyExpenseChat', false);
+                        return isPolicyExpenseChat ? OptionsListUtils.getPolicyExpenseReportOption(participant) : OptionsListUtils.getParticipantsOption(participant, personalDetails);
+                    })
+                    .map(mapping)
+                    .value(),
+                shouldShow: true,
+                indexOffset,
+            });
+        }
+
+        return newSections;
     }, [maxParticipantsReached, newChatOptions, participants, personalDetails, translate, searchTerm]);
+    console.log('sections', sections);
 
     /**
      * Adds a single participant to the request
@@ -191,7 +263,7 @@ function MoneyRequestParticipantsSelector({
      */
     const addSingleParticipant = (option) => {
         onAddParticipants(
-            [{accountID: option.accountID, login: option.login, isPolicyExpenseChat: option.isPolicyExpenseChat, reportID: option.reportID, selected: true, searchText: option.searchText}],
+            [{ accountID: option.accountID, login: option.login, isPolicyExpenseChat: option.isPolicyExpenseChat, reportID: option.reportID, selected: true, searchText: option.searchText }],
             false,
         );
         navigateToRequest();
@@ -263,30 +335,42 @@ function MoneyRequestParticipantsSelector({
 
     return (
         <View style={[styles.flex1, styles.w100, participants.length > 0 ? safeAreaPaddingBottomStyle : {}]}>
-            <OptionsSelector
-                canSelectMultipleOptions={isAllowedToSplit}
-                shouldShowMultipleOptionSelectorAsButton
-                multipleOptionSelectorButtonText={translate('iou.split')}
-                onAddToSelection={addParticipantToSelection}
-                sections={sections}
-                selectedOptions={participants}
-                value={searchTerm}
-                onSelectRow={addSingleParticipant}
-                onChangeText={setSearchTermAndSearchInServer}
-                ref={forwardedRef}
-                headerMessage={headerMessage}
-                boldStyle
-                shouldShowConfirmButton={shouldShowConfirmButton && isAllowedToSplit}
+            <SelectionList
+                canSelectMultiple={isAllowedToSplit}
+                showConfirmButton={shouldShowConfirmButton && isAllowedToSplit}
                 confirmButtonText={translate('iou.addToSplit')}
-                onConfirmSelection={navigateToSplit}
+                onConfirm={navigateToSplit}
+                sections={sections}
+                textInputValue={searchTerm}
                 textInputLabel={translate('optionsSelector.nameEmailOrPhoneNumber')}
-                textInputAlert={isOffline ? `${translate('common.youAppearToBeOffline')} ${translate('search.resultsAreLimited')}` : ''}
-                safeAreaPaddingBottomStyle={safeAreaPaddingBottomStyle}
-                shouldShowOptions={isOptionsDataReady}
+                onChangeText={setSearchTermAndSearchInServer}
                 shouldPreventDefaultFocusOnSelectRow={!Browser.isMobile()}
-                shouldDelayFocus
-                isLoadingNewOptions={isSearchingForReports}
+                onSelectRow={addParticipantToSelection}
             />
+            {/* <OptionsSelector
+                    canSelectMultipleOptions={isAllowedToSplit}
+                    shouldShowMultipleOptionSelectorAsButton
+                    multipleOptionSelectorButtonText={translate('iou.split')}
+                    onAddToSelection={addParticipantToSelection}
+                    sections={sections}
+                    selectedOptions={participants}
+                    value={searchTerm}
+                    onSelectRow={addSingleParticipant}
+                    onChangeText={setSearchTermAndSearchInServer}
+                    ref={forwardedRef}
+                    headerMessage={headerMessage}
+                    boldStyle
+                    shouldShowConfirmButton={shouldShowConfirmButton && isAllowedToSplit}
+                    confirmButtonText={translate('iou.addToSplit')}
+                    onConfirmSelection={navigateToSplit}
+                    textInputLabel={translate('optionsSelector.nameEmailOrPhoneNumber')}
+                    textInputAlert={isOffline ? `${translate('common.youAppearToBeOffline')} ${translate('search.resultsAreLimited')}` : ''}
+                    safeAreaPaddingBottomStyle={safeAreaPaddingBottomStyle}
+                    shouldShowOptions={isOptionsDataReady}
+                    shouldPreventDefaultFocusOnSelectRow={!Browser.isMobile()}
+                    shouldDelayFocus
+                    isLoadingNewOptions={isSearchingForReports}
+                /> */}
         </View>
     );
 }
