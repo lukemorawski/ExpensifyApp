@@ -5,6 +5,7 @@ type InputType = (typeof CONST.INPUT_TYPES_WITH_KEYBOARD)[number];
 type TCallbackFn = () => void;
 
 const isInputKeyboardType = (element: Element | null): boolean => {
+    console.log('Keyboard element type', element?.tagName);
     if (element && ((element.tagName === 'INPUT' && CONST.INPUT_TYPES_WITH_KEYBOARD.includes((element as HTMLInputElement).type as InputType)) || element.tagName === 'TEXTAREA')) {
         return true;
     }
@@ -13,6 +14,7 @@ const isInputKeyboardType = (element: Element | null): boolean => {
 
 const isVisible = (): boolean => {
     const focused = document.activeElement;
+    console.log('Keyboard', document.activeElement);
     return isInputKeyboardType(focused);
 };
 
@@ -20,8 +22,8 @@ const nullFn: () => null = () => null;
 
 let isKeyboardListenerRunning = false;
 let currentVisibleElement: Element | null = null;
-const showListeners: TCallbackFn[] = [];
-const hideListeners: TCallbackFn[] = [];
+let showListeners: TCallbackFn[] = [];
+let hideListeners: TCallbackFn[] = [];
 const visualViewport = window.visualViewport ?? {
     height: window.innerHeight,
     width: window.innerWidth,
@@ -71,11 +73,11 @@ const addListener = (eventName: 'keyboardDidShow' | 'keyboardDidHide', callbackF
 
     return () => {
         if (eventName === 'keyboardDidShow') {
-            showListeners.filter((fn) => fn !== callbackFn);
+            showListeners = showListeners.filter((fn) => fn !== callbackFn);
         }
 
         if (eventName === 'keyboardDidHide') {
-            hideListeners.filter((fn) => fn !== callbackFn);
+            hideListeners = hideListeners.filter((fn) => fn !== callbackFn);
         }
 
         if (isKeyboardListenerRunning && !showListeners.length && !hideListeners.length) {

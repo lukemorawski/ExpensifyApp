@@ -1,3 +1,5 @@
+import {useNavigation} from '@react-navigation/native';
+import lodashGet from 'lodash/get';
 import {useEffect, useRef} from 'react';
 import Keyboard from '@libs/NativeWebKeyboard';
 
@@ -14,28 +16,56 @@ function useBlockViewportScroll() {
     const optimalScrollY = useRef(0);
     const keyboardShowListenerRef = useRef(() => {});
     const keyboardHideListenerRef = useRef(() => {});
+    const touchEndRegistered = useRef(false);
+    const navigation = useNavigation();
 
     useEffect(() => {
+        let unsubscribeTransitionEnd;
+        console.log('Keyboard hook mount ', {isVisible: Keyboard.isVisible(), scroll: window.scrollY});
         const handleTouchEnd = () => {
+            if (optimalScrollY.current === window.scrollY) {
+                return;
+            }
             window.scrollTo({top: optimalScrollY.current, behavior: 'smooth'});
         };
 
         const handleKeybShow = () => {
+            console.log('Keyboard on show', window.scrollY);
             optimalScrollY.current = window.scrollY;
+            if (touchEndRegistered.current) {
+                return;
+            }
             window.addEventListener('touchend', handleTouchEnd);
+            touchEndRegistered.current = true;
         };
 
         const handleKeybHide = () => {
+            console.log('Keyboard on hide');
             window.removeEventListener('touchend', handleTouchEnd);
+            touchEndRegistered.current = false;
         };
+        unsubscribeTransitionEnd = navigation.addListener('transitionEnd', (event) => {
+            // Prevent firing the prop callback when user is exiting the page.
+            if (lodashGet(event, 'data.closing')) {
+                return;
+            }
+            console.log('Keyboard hook mount animation frame', {isVisible: Keyboard.isVisible(), scroll: window.scrollY, scrollB: document.documentElement.scrollTop});
+            if (Keyboard.isVisible()) {
+                optimalScrollY.current = window.scrollY;
+                handleKeybShow();
+            }
+        });
 
+        // requestAnimationFrame(() => {
         keyboardShowListenerRef.current = Keyboard.addListener('keyboardDidShow', handleKeybShow);
         keyboardHideListenerRef.current = Keyboard.addListener('keyboardDidHide', handleKeybHide);
+        // });
 
         return () => {
             keyboardShowListenerRef.current();
             keyboardHideListenerRef.current();
             window.removeEventListener('touchend', handleTouchEnd);
+            unsubscribeTransitionEnd();
         };
     }, []);
 }
