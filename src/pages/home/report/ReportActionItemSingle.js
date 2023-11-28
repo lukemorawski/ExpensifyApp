@@ -2,7 +2,6 @@ import lodashGet from 'lodash/get';
 import PropTypes from 'prop-types';
 import React, {useCallback, useMemo} from 'react';
 import {View} from 'react-native';
-import {withOnyx} from 'react-native-onyx';
 import _ from 'underscore';
 import Avatar from '@components/Avatar';
 import MultipleAvatars from '@components/MultipleAvatars';
@@ -14,11 +13,9 @@ import Text from '@components/Text';
 import Tooltip from '@components/Tooltip';
 import UserDetailsTooltip from '@components/UserDetailsTooltip';
 import withLocalize, {withLocalizePropTypes} from '@components/withLocalize';
-import compose from '@libs/compose';
 import ControlSelection from '@libs/ControlSelection';
 import DateUtils from '@libs/DateUtils';
 import Navigation from '@libs/Navigation/Navigation';
-import Permissions from '@libs/Permissions';
 import * as ReportUtils from '@libs/ReportUtils';
 import * as UserUtils from '@libs/UserUtils';
 import reportPropTypes from '@pages/reportPropTypes';
@@ -26,7 +23,6 @@ import styles from '@styles/styles';
 import * as StyleUtils from '@styles/StyleUtils';
 import themeColors from '@styles/themes/default';
 import CONST from '@src/CONST';
-import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES from '@src/ROUTES';
 import ReportActionItemDate from './ReportActionItemDate';
 import ReportActionItemFragment from './ReportActionItemFragment';
@@ -108,7 +104,7 @@ function ReportActionItemSingle(props) {
 
     // If this is a report preview, display names and avatars of both people involved
     let secondaryAvatar = {};
-    const primaryDisplayName = ReportUtils.getDisplayNameForParticipant(actorAccountID);
+    const primaryDisplayName = displayName;
     if (displayAllActors) {
         // The ownerAccountID and actorAccountID can be the same if the a user requests money back from the IOU's original creator, in that case we need to use managerID to avoid displaying the same user twice
         const secondaryAccountId = props.iouReport.ownerAccountID === actorAccountID ? props.iouReport.managerID : props.iouReport.ownerAccountID;
@@ -205,7 +201,7 @@ function ReportActionItemSingle(props) {
             </UserDetailsTooltip>
         );
     };
-    const hasEmojiStatus = !displayAllActors && status && status.emojiCode && Permissions.canUseCustomStatus(props.betas);
+    const hasEmojiStatus = !displayAllActors && status && status.emojiCode;
     const formattedDate = DateUtils.getStatusUntilDate(lodashGet(status, 'clearAfter'));
     const statusText = lodashGet(status, 'text', '');
     const statusTooltipText = formattedDate ? `${statusText} (${formattedDate})` : statusText;
@@ -219,7 +215,7 @@ function ReportActionItemSingle(props) {
                 onPress={showActorDetails}
                 disabled={shouldDisableDetailPage}
                 accessibilityLabel={actorHint}
-                accessibilityRole={CONST.ACCESSIBILITY_ROLE.BUTTON}
+                role={CONST.ACCESSIBILITY_ROLE.BUTTON}
             >
                 <OfflineWithFeedback pendingAction={lodashGet(pendingFields, 'avatar', null)}>{getAvatar()}</OfflineWithFeedback>
             </PressableWithoutFeedback>
@@ -233,7 +229,7 @@ function ReportActionItemSingle(props) {
                             onPress={showActorDetails}
                             disabled={shouldDisableDetailPage}
                             accessibilityLabel={actorHint}
-                            accessibilityRole={CONST.ACCESSIBILITY_ROLE.BUTTON}
+                            role={CONST.ACCESSIBILITY_ROLE.BUTTON}
                         >
                             {_.map(personArray, (fragment, index) => (
                                 <ReportActionItemFragment
@@ -267,11 +263,4 @@ ReportActionItemSingle.propTypes = propTypes;
 ReportActionItemSingle.defaultProps = defaultProps;
 ReportActionItemSingle.displayName = 'ReportActionItemSingle';
 
-export default compose(
-    withLocalize,
-    withOnyx({
-        betas: {
-            key: ONYXKEYS.BETAS,
-        },
-    }),
-)(ReportActionItemSingle);
+export default withLocalize(ReportActionItemSingle);
