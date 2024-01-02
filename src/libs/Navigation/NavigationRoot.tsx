@@ -32,6 +32,7 @@ function parseAndLogRoute(state: NavigationState) {
         Log.info('Navigating from transition link from OldDot using short lived authToken');
     } else {
         Log.info('Navigating to route', false, {path: currentPath});
+        console.log('Navigating to route', {path: currentPath});
     }
 
     Navigation.setIsNavigationReady();

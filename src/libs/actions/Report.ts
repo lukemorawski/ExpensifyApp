@@ -25,6 +25,7 @@ import * as ReportUtils from '@libs/ReportUtils';
 import shouldSkipDeepLinkNavigation from '@libs/shouldSkipDeepLinkNavigation';
 import * as UserUtils from '@libs/UserUtils';
 import Visibility from '@libs/Visibility';
+import willBlurTextInputOnTapOutside from '@libs/willBlurTextInputOnTapOutside';
 import CONFIG from '@src/CONFIG';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
@@ -2051,6 +2052,8 @@ function openReportFromDeepLink(url: string, isAuthenticated: boolean) {
                 if (shouldSkipDeepLinkNavigation(route)) {
                     return;
                 }
+
+                console.log('navigating report.ts', route);
 
                 Navigation.navigate(route as Route, CONST.NAVIGATION.ACTION_TYPE.PUSH);
             });

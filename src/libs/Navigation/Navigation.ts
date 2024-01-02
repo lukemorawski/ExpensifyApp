@@ -2,6 +2,7 @@ import {findFocusedRoute, getActionFromState} from '@react-navigation/core';
 import {CommonActions, EventArg, getPathFromState, NavigationContainerEventMap, NavigationState, PartialState, StackActions} from '@react-navigation/native';
 import findLastIndex from 'lodash/findLastIndex';
 import Log from '@libs/Log';
+import * as Url from '@libs/Url';
 import CONST from '@src/CONST';
 import NAVIGATORS from '@src/NAVIGATORS';
 import ROUTES, {Route} from '@src/ROUTES';
@@ -114,8 +115,11 @@ function getActiveRoute(): string {
  * @return is active
  */
 function isActiveRoute(routePath: Route): boolean {
+    const activeRoute = Url.nomralizeURL(getActiveRoute());
+    const destinationRoute = Url.nomralizeURL(routePath);
+    console.log('navigating isActiveRoute', destinationRoute, activeRoute);
     // We remove First forward slash from the URL before matching
-    return getActiveRoute().substring(1) === routePath;
+    return activeRoute === destinationRoute;
 }
 
 /**
@@ -130,7 +134,9 @@ function navigate(route: Route = ROUTES.HOME, type?: string) {
         pendingRoute = route;
         return;
     }
-    linkTo(navigationRef.current, route, type, isActiveRoute(route));
+    const isActive = isActiveRoute(route);
+    console.log('navigating navigate isActive', isActive);
+    linkTo(navigationRef.current, route, type, isActive);
 }
 
 /**

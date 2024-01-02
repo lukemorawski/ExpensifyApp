@@ -1,3 +1,4 @@
+import flow from 'lodash/flow';
 import 'react-native-url-polyfill/auto';
 
 /**
@@ -9,6 +10,24 @@ function addTrailingForwardSlash(url: string): string {
     }
     return url;
 }
+
+/**
+ * Remove leading / of any URL if present
+ */
+function removeLeadingForwardSlash(url: string): string {
+    if (url.startsWith('/')) {
+        return url.substring(1);
+    }
+    return url;
+}
+
+/**
+ * Normalize a URL string by adding a trailing forward slash, removing a leading forward slash, and decoding URI components.
+ *
+ * @param {string} url - The URL string to be processed.
+ * @returns {string} The processed URL string.
+ */
+const nomralizeURL: (url: string) => string = flow([addTrailingForwardSlash, removeLeadingForwardSlash, decodeURIComponent]);
 
 /**
  * Get path from URL string
@@ -41,4 +60,4 @@ function hasSameExpensifyOrigin(url1: string, url2: string): boolean {
     }
 }
 
-export {addTrailingForwardSlash, hasSameExpensifyOrigin, getPathFromURL};
+export {addTrailingForwardSlash, hasSameExpensifyOrigin, getPathFromURL, removeLeadingForwardSlash, nomralizeURL};
